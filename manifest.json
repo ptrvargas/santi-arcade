@@ -1,0 +1,16 @@
+{
+  "name": "Santi Arcade",
+  "short_name": "Santi Arcade",
+  "description": "Santi Arcade V0.2 — Play, learn, and level up in City Quest.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07182b",
+  "theme_color": "#07182b",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}
+  ]
+}

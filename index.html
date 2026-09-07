@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#07182b">
+  <meta name="description" content="Santi Arcade — Play, learn, and level up in City Quest.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Santi Arcade">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preload" href="assets/city-panorama.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero-0.webp" as="image" type="image/webp">
+  <title>Santi Arcade V0.2</title>
+</head>
+<body>
+  <main id="app">
+    <section id="start-screen" class="screen active start-screen" aria-label="Santi Arcade start">
+      <div class="stars-bg" aria-hidden="true"></div>
+      <div class="brand-lockup">
+        <div class="pixel-bolt">⚡</div>
+        <h1><span>SANTI</span><strong>ARCADE</strong></h1>
+        <p>Play <b>•</b> Learn <b>•</b> Level Up</p>
+      </div>
+      <button id="play-btn" class="mega-btn">PLAY <span>▶</span></button>
+      <p class="save-note">Your adventure saves on this device.</p>
+    </section>
+
+    <section id="creator-screen" class="screen creator-screen" aria-label="Create your player">
+      <header class="screen-header"><h2>CREATE YOUR PLAYER</h2><p>Make your arcade hero!</p></header>
+      <div class="creator-layout">
+        <div class="avatar-stage"><canvas id="avatar-preview" width="260" height="320"></canvas></div>
+        <form id="creator-form" class="creator-form">
+          <label class="name-label">NICKNAME<input id="nickname" maxlength="12" autocomplete="off" placeholder="Player" required></label>
+          <fieldset><legend>SKIN</legend><div id="skin-options" class="swatches"></div></fieldset>
+          <fieldset><legend>HAIR</legend><div id="hair-options" class="choice-row"></div></fieldset>
+          <fieldset><legend>SHIRT</legend><div id="shirt-options" class="swatches"></div></fieldset>
+          <fieldset><legend>PANTS</legend><div id="pants-options" class="swatches"></div></fieldset>
+          <fieldset><legend>EXTRA</legend><div id="extra-options" class="choice-row"></div></fieldset>
+          <button class="primary-btn" type="submit">READY!</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="welcome-screen" class="screen center-screen" aria-label="Welcome">
+      <div class="burst" aria-hidden="true">★</div><h2 id="welcome-title">WELCOME!</h2><p>YOUR ADVENTURE STARTS NOW</p>
+    </section>
+
+    <section id="home-screen" class="screen home-screen" aria-label="Arcade home">
+      <header class="topbar"><button class="brand-mini home-button" aria-label="Arcade home">SA</button><div class="player-chip"><canvas id="home-avatar" width="48" height="48"></canvas><span id="home-name">PLAYER</span></div><div class="coin-chip">● <span id="total-coins">0</span></div><button id="sound-btn" class="icon-btn" aria-label="Toggle sound">🔊</button></header>
+      <div class="home-content"><h2>CHOOSE A GAME</h2>
+        <button id="quest-card" class="game-card"><span class="city-art" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="card-copy"><small>SANTI QUEST</small><strong>CITY QUEST</strong><em>Run • Jump • Solve</em></span><span class="play-pill">PLAY ▶</span></button>
+        <div class="locked-grid"><article class="locked-card"><span>🌲</span><strong>COMING SOON</strong><small>NEW WORLD</small></article><article class="locked-card"><span>🔒</span><strong>LOCKED</strong><small>KEEP LEVELING UP!</small></article></div>
+      </div>
+    </section>
+
+    <section id="map-screen" class="screen map-screen" aria-label="City Quest level map">
+      <header class="topbar"><button class="icon-btn" data-go="home-screen" aria-label="Back">‹</button><div><small>SANTI QUEST</small><strong>CITY QUEST</strong></div><div class="coin-chip">● <span class="coins-sync">0</span></div></header>
+      <div class="map-wrap"><div class="map-skyline" aria-hidden="true"></div><h2>CHOOSE A LEVEL</h2><div id="level-map" class="level-map"></div></div>
+    </section>
+
+    <section id="game-screen" class="screen game-screen" aria-label="City Quest game">
+      <div id="rotate-hint"><span>↻</span> Turn your phone sideways for more room!</div>
+      <div class="game-hud"><button id="pause-btn" class="hud-btn" aria-label="Pause">Ⅱ</button><div><small id="level-label">LEVEL 1</small><strong id="mission-label">NEON START</strong></div><div class="hud-stats"><span>● <b id="run-coins">0</b></span><span>♥ <b id="lives">3</b></span></div><button id="game-sound-btn" class="hud-btn" aria-label="Toggle sound">🔊</button></div>
+      <div id="game-wrap"><canvas id="game-canvas" width="960" height="540" aria-label="Platform game"></canvas><div id="toast" role="status"></div><div id="math-panel" class="math-panel hidden"><small id="math-kind">POWER GATE</small><h3 id="math-question">5 + 4 = ?</h3><p id="math-visual"></p><div id="math-answers"></div><p id="math-feedback"></p></div></div>
+      <div id="touch-controls" aria-label="Touch controls"><div class="move-controls"><button data-key="left" aria-label="Move left">◀<small>LEFT</small></button><button data-key="right" aria-label="Move right">▶<small>RIGHT</small></button></div><button data-key="jump" class="jump-btn" aria-label="Jump">▲<small>JUMP</small></button></div>
+      <div id="pause-panel" class="overlay hidden"><div class="modal"><h2>PAUSED</h2><button id="resume-btn" class="primary-btn">KEEP PLAYING</button><button id="restart-btn" class="secondary-btn">RESTART LEVEL</button><button id="exit-btn" class="text-btn">LEVEL MAP</button></div></div>
+    </section>
+
+    <section id="complete-screen" class="screen complete-screen" aria-label="Level complete">
+      <div class="complete-card"><p class="eyebrow">CITY QUEST</p><h2>LEVEL COMPLETE!</h2><div id="earned-stars" class="big-stars">★★★</div><canvas id="dance-avatar" width="130" height="150"></canvas><div class="result-grid"><div><span>●</span><b id="result-coins">0</b><small>COINS</small></div><div><span>✓</span><b id="result-math">0/0</b><small>MATH</small></div><div><span>⏱</span><b id="result-time">0:00</b><small>TIME</small></div></div><p id="unlock-message"></p><button id="next-btn" class="primary-btn">NEXT LEVEL</button><button id="again-btn" class="secondary-btn">PLAY AGAIN</button><button class="text-btn" data-go="map-screen">LEVEL MAP</button></div>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+</body>
+</html>
