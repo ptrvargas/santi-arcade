@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preload" href="assets/city-panorama.webp" as="image" type="image/webp">
   <link rel="preload" href="assets/hero-0.webp" as="image" type="image/webp">
-  <title>Santi Arcade V0.3</title>
+  <title>Santi Arcade V0.4</title>
 </head>
 <body>
   <main id="app">
@@ -27,6 +27,7 @@
       </div>
       <button id="play-btn" class="mega-btn">PLAY <span>▶</span></button>
       <button id="install-btn" class="install-btn hidden" type="button">📲 INSTALL APP</button>
+      <button class="start-settings settings-btn" type="button">⚙️ SETTINGS</button>
       <aside id="ios-install-help" class="install-help hidden" aria-label="Install Santi Arcade">
         <strong>ADD SANTI ARCADE TO HOME SCREEN</strong>
         <span>Tap Share <b>↗</b> → Add to Home Screen</span>
@@ -55,7 +56,7 @@
     </section>
 
     <section id="home-screen" class="screen home-screen" aria-label="Arcade home">
-      <header class="topbar"><button class="brand-mini home-button" aria-label="Arcade home">SA</button><div class="player-chip"><canvas id="home-avatar" width="48" height="48"></canvas><span id="home-name">PLAYER</span></div><div class="coin-chip">● <span id="total-coins">0</span></div><button id="sound-btn" class="icon-btn" aria-label="Toggle sound">🔊</button></header>
+      <header class="topbar"><button class="brand-mini home-button" aria-label="Arcade home">SA</button><div class="player-chip"><canvas id="home-avatar" width="48" height="48"></canvas><span id="home-name">PLAYER</span></div><div class="coin-chip">● <span id="total-coins">0</span></div><div class="energy-chip">⚡ <span class="energy-sync">0</span></div><button class="icon-btn settings-btn" aria-label="Open settings">⚙️</button><button id="sound-btn" class="icon-btn" aria-label="Toggle all audio">🔊</button></header>
       <div class="home-content"><h2>CHOOSE A GAME</h2>
         <button id="quest-card" class="game-card"><span class="city-art" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="card-copy"><small>SANTI QUEST</small><strong>CITY QUEST</strong><em>Run • Jump • Solve</em></span><span class="play-pill">PLAY ▶</span></button>
         <div class="locked-grid"><article class="locked-card"><span>🌲</span><strong>COMING SOON</strong><small>NEW WORLD</small></article><article class="locked-card"><span>🔒</span><strong>LOCKED</strong><small>KEEP LEVELING UP!</small></article></div>
@@ -63,22 +64,24 @@
     </section>
 
     <section id="map-screen" class="screen map-screen" aria-label="City Quest level map">
-      <header class="topbar"><button class="icon-btn" data-go="home-screen" aria-label="Back">‹</button><div><small>SANTI QUEST</small><strong>CITY QUEST</strong></div><div class="coin-chip">● <span class="coins-sync">0</span></div></header>
+      <header class="topbar"><button class="icon-btn" data-go="home-screen" aria-label="Back">‹</button><div><small>SANTI QUEST</small><strong>CITY QUEST</strong></div><div class="coin-chip">● <span class="coins-sync">0</span></div><div class="energy-chip">⚡ <span class="energy-sync">0</span></div><button class="icon-btn settings-btn" aria-label="Open settings">⚙️</button></header>
       <div class="map-wrap"><div class="map-skyline" aria-hidden="true"></div><h2>CHOOSE A LEVEL</h2><div id="level-map" class="level-map"></div></div>
     </section>
 
     <section id="game-screen" class="screen game-screen" aria-label="City Quest game">
       <div id="rotate-hint" aria-live="polite"><span>↻</span><strong>ROTATE YOUR PHONE TO PLAY</strong><small>If rotation is locked, turn on Auto-Rotate.</small></div>
-      <div class="game-hud"><button id="pause-btn" class="hud-btn" aria-label="Pause">Ⅱ</button><div><small id="level-label">LEVEL 1</small><strong id="mission-label">NEON START</strong></div><div class="hud-stats"><span>● <b id="run-coins">0</b></span><span>♥ <b id="lives">3</b></span></div><button id="fullscreen-btn" class="fullscreen-btn" type="button" aria-label="Enter full screen">⛶ <span>FULL SCREEN</span></button><button id="game-sound-btn" class="hud-btn" aria-label="Toggle sound">🔊</button></div>
-      <div id="game-wrap"><canvas id="game-canvas" width="960" height="540" aria-label="Platform game"></canvas><div id="toast" role="status"></div><div id="math-panel" class="math-panel hidden"><small id="math-kind">POWER GATE</small><h3 id="math-question">5 + 4 = ?</h3><p id="math-visual"></p><div id="math-answers"></div><p id="math-feedback"></p></div></div>
+      <div class="game-hud"><button id="pause-btn" class="hud-btn" aria-label="Pause">Ⅱ</button><div class="mission-chip"><small id="level-label">LEVEL 1</small><strong id="mission-label">NEON START</strong></div><div class="hud-stats"><span>● <b id="run-coins">0</b></span><span>♥ <b id="lives">5</b></span><span>⭐ <b id="run-stars">0</b></span><span class="power-stat">⚡ <b id="power-energy">0</b></span></div><button id="shield-btn" class="power-btn" type="button" aria-label="Use 3 Power Energy for a shield">🛡️ <span>3⚡</span></button><button id="fullscreen-btn" class="fullscreen-btn" type="button" aria-label="Enter full screen">⛶ <span>FULL SCREEN</span></button><button id="game-sound-btn" class="hud-btn" aria-label="Toggle all audio">🔊</button></div>
+      <div id="game-wrap"><canvas id="game-canvas" width="960" height="540" aria-label="Platform game"></canvas><div id="toast" role="status"></div><div id="math-panel" class="math-panel hidden"><small id="math-kind">POWER GATE</small><h3 id="math-question">5 + 4 = ?</h3><p id="math-visual"></p><div id="math-answers"></div><p id="math-feedback"></p><div id="math-reward" class="math-reward hidden">CORRECT!<strong>+1 ⚡ POWER ENERGY</strong></div></div></div>
       <div id="touch-controls" aria-label="Touch controls"><div class="move-controls"><button data-key="left" aria-label="Move left">◀<small>LEFT</small></button><button data-key="right" aria-label="Move right">▶<small>RIGHT</small></button></div><button data-key="jump" class="jump-btn" aria-label="Jump">▲<small>JUMP</small></button></div>
       <div id="pause-panel" class="overlay hidden"><div class="modal"><h2>PAUSED</h2><button id="resume-btn" class="primary-btn">KEEP PLAYING</button><button id="restart-btn" class="secondary-btn">RESTART LEVEL</button><button id="exit-btn" class="text-btn">LEVEL MAP</button></div></div>
       <div id="nice-try-panel" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="nice-try-title"><div class="modal nice-try-modal"><div class="retry-icon" aria-hidden="true">♥</div><h2 id="nice-try-title">NICE TRY!</h2><p>Ready for another run?</p><button id="try-again-btn" class="primary-btn">TRY AGAIN</button><button id="retry-map-btn" class="text-btn">LEVEL MAP</button></div></div>
+      <div id="rescue-panel" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rescue-title"><div class="modal rescue-modal"><div class="rescue-icon" aria-hidden="true">⚡</div><h2 id="rescue-title">OUT OF HEARTS!</h2><p>Use 5 ⚡ for +1 ❤️?</p><small id="rescue-count">You can rescue twice each run.</small><button id="keep-going-btn" class="primary-btn">KEEP GOING</button><button id="rescue-retry-btn" class="secondary-btn">TRY AGAIN</button></div></div>
     </section>
 
     <section id="complete-screen" class="screen complete-screen" aria-label="Level complete">
       <div class="complete-card"><p class="eyebrow">CITY QUEST</p><h2>LEVEL COMPLETE!</h2><div id="earned-stars" class="big-stars">★★★</div><canvas id="dance-avatar" width="130" height="150"></canvas><div class="result-grid"><div><span>●</span><b id="result-coins">0</b><small>COINS</small></div><div><span>✓</span><b id="result-math">0/0</b><small>MATH</small></div><div><span>⏱</span><b id="result-time">0:00</b><small>TIME</small></div></div><p id="unlock-message"></p><button id="next-btn" class="primary-btn">NEXT LEVEL</button><button id="again-btn" class="secondary-btn">PLAY AGAIN</button><button class="text-btn" data-go="map-screen">LEVEL MAP</button></div>
     </section>
+    <div id="settings-panel" class="overlay global-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title"><div class="modal settings-modal"><div class="settings-heading"><h2 id="settings-title">⚙️ SETTINGS</h2><button id="settings-close" class="icon-btn" aria-label="Close settings">×</button></div><div class="setting-row"><span><strong>MUSIC</strong><small>Arcade background music</small></span><button id="music-toggle" class="toggle-btn" type="button" role="switch" aria-checked="true">ON</button></div><div class="setting-row"><span><strong>SOUND EFFECTS</strong><small>Jumps, rewards, and game sounds</small></span><button id="sfx-toggle" class="toggle-btn" type="button" role="switch" aria-checked="true">ON</button></div><label class="volume-setting" for="master-volume"><span><strong>MASTER VOLUME</strong><b id="volume-value">70%</b></span><input id="master-volume" type="range" min="0" max="100" step="5" value="70"></label><p class="settings-note">Your settings save on this device.</p></div></div>
   </main>
   <script src="js/app.js"></script>
 </body>
