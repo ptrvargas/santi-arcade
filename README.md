@@ -1,4 +1,4 @@
-# Santi Arcade V0.2 — Visual Upgrade
+# Santi Arcade V0.3 — Mobile Polish & Gameplay Update
 
 Visually upgraded playable build of **Santi Quest — City Quest**, preserving the V0.1 game engine and progression while adding original optimized game art, animated hero sprites, richer scenery and upgraded game feel.
 
