@@ -12,10 +12,15 @@ art.heroes.push(im)}
 const I18N={en:{almost:'ALMOST!',again:'TRY AGAIN!',got:'YOU\'VE GOT THIS!',great:'NICE!',checkpoint:'CHECKPOINT!',goal:'GOAL!'}};
 const t=I18N.en;
 
-const DEFAULT={version:1,player:null,unlocked:1,coins:0,stars:{},best:{},sound:true};
+const DEFAULT={version:4,player:null,unlocked:1,coins:0,stars:{},best:{},sound:true,musicOn:true,sfxOn:true,masterVolume:.7,powerEnergy:0,lastQuestions:{}};
 
 let save;
 try{save={...DEFAULT,...JSON.parse(localStorage.getItem('santiArcadeSave')||'{}')}}catch(e){save={...DEFAULT}};
+if(typeof save.musicOn!=='boolean')save.musicOn=save.sound!==false;
+if(typeof save.sfxOn!=='boolean')save.sfxOn=save.sound!==false;
+save.masterVolume=Math.max(0,Math.min(1,Number(save.masterVolume)||0));
+save.powerEnergy=Math.max(0,Number(save.powerEnergy)||0);
+save.lastQuestions=save.lastQuestions||{};
 
 const persist=()=>localStorage.setItem('santiArcadeSave',JSON.stringify(save));
 
@@ -23,38 +28,51 @@ const screens=$$('.screen');
 function show(id){screens.forEach(x=>x.classList.toggle('active',x.id===id));
 if(id==='home-screen')syncHome();
 if(id==='map-screen')buildMap();
+if(['start-screen','home-screen','map-screen'].includes(id))setMusic('menu');
 requestAnimationFrame(updateOrientationGate)}
 
-// Original procedural arcade audio: no downloaded or copyrighted sound files.
-let audioCtx=null,musicTimer=null;
-function wakeAudio(){if(!save.sound)return;
+// Original compact music files and synthesized effects. Audio starts only after a user gesture.
+let audioCtx=null,audioUnlocked=false,currentTrack='';
+const tracks={menu:new Audio('sounds/menu-theme.mp3'),game:new Audio('sounds/city-quest-theme.mp3'),victory:new Audio('sounds/victory-theme.mp3')};
+tracks.menu.loop=true;
+tracks.game.loop=true;
+tracks.victory.loop=false;
+Object.values(tracks).forEach(a=>{a.preload='auto';a.playsInline=true});
+function applyAudioSettings(){Object.values(tracks).forEach(a=>a.volume=save.musicOn?save.masterVolume*.38:0);
+$('#music-toggle')?.setAttribute('aria-checked',String(save.musicOn));
+$('#sfx-toggle')?.setAttribute('aria-checked',String(save.sfxOn));
+if($('#music-toggle'))$('#music-toggle').textContent=save.musicOn?'ON':'OFF';
+if($('#sfx-toggle'))$('#sfx-toggle').textContent=save.sfxOn?'ON':'OFF';
+if($('#master-volume'))$('#master-volume').value=Math.round(save.masterVolume*100);
+if($('#volume-value'))$('#volume-value').textContent=`${Math.round(save.masterVolume*100)}%`;
+if(!save.musicOn)Object.values(tracks).forEach(a=>a.pause());
+updateAudioButtons()}
+function wakeAudio(){audioUnlocked=true;
 if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-if(audioCtx.state==='suspended')audioCtx.resume()}
-function tone(freq,dur=.09,type='sine',vol=.05,delay=0){if(!save.sound)return;
-wakeAudio();
+if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+if(currentTrack&&save.musicOn)tracks[currentTrack]?.play().catch(()=>{})}
+function tone(freq,dur=.09,type='sine',vol=.05,delay=0){if(!save.sfxOn||save.masterVolume<=0)return;
+if(!audioUnlocked)return;
+if(!audioCtx)wakeAudio();
 if(!audioCtx)return;
 const o=audioCtx.createOscillator(),g=audioCtx.createGain(),now=audioCtx.currentTime+delay;
 o.type=type;
 o.frequency.setValueAtTime(freq,now);
-g.gain.setValueAtTime(vol,now);
+g.gain.setValueAtTime(vol*save.masterVolume,now);
 g.gain.exponentialRampToValueAtTime(.0001,now+dur);
 o.connect(g).connect(audioCtx.destination);
 o.start(now);
 o.stop(now+dur)}
-const sfx={jump:()=>tone(330,.1,'square',.025),coin:()=>{tone(740,.07,'square',.04);
-tone(980,.08,'square',.03,.06)},correct:()=>[523,659,784].forEach((n,i)=>tone(n,.12,'triangle',.04,i*.07)),wrong:()=>tone(155,.22,'sawtooth',.025),check:()=>[392,523].forEach((n,i)=>tone(n,.18,'sine',.05,i*.1)),unlock:()=>[392,523,659,784].forEach((n,i)=>tone(n,.18,'triangle',.05,i*.09)),finish:()=>[523,659,784,1046].forEach((n,i)=>tone(n,.28,'triangle',.06,i*.1))};
-
-function music(on){clearInterval(musicTimer);
-musicTimer=null;
-if(on&&save.sound){wakeAudio();
-let i=0,notes=[130,164,196,164,147,196,220,196];
-musicTimer=setInterval(()=>{if($('#game-screen').classList.contains('active')&&!game.paused)tone(notes[i++%notes.length],.15,'triangle',.012)},380)}}
-function toggleSound(){save.sound=!save.sound;
-persist();
-$$('#sound-btn,#game-sound-btn').forEach(b=>b.textContent=save.sound?'🔊':'🔇');
-if(save.sound){wakeAudio();
-sfx.coin();
-music($('#game-screen').classList.contains('active'))}else music(false)}
+const sfx={jump:()=>tone(330,.1,'square',.028),coin:()=>{tone(740,.07,'square',.045);tone(980,.08,'square',.035,.06)},challenge:()=>[294,392].forEach((n,i)=>tone(n,.14,'sine',.035,i*.07)),correct:()=>[523,659,784].forEach((n,i)=>tone(n,.12,'triangle',.045,i*.07)),wrong:()=>tone(180,.16,'sine',.025),energy:()=>[659,880,1046].forEach((n,i)=>tone(n,.1,'square',.025,i*.055)),check:()=>[392,523].forEach((n,i)=>tone(n,.18,'sine',.05,i*.1)),unlock:()=>[392,523,659,784].forEach((n,i)=>tone(n,.18,'triangle',.05,i*.09)),shield:()=>[240,360,540].forEach((n,i)=>tone(n,.2,'sine',.045,i*.05)),turbo:()=>[440,660,880,1100].forEach((n,i)=>tone(n,.12,'sawtooth',.025,i*.045)),loseHeart:()=>[260,190].forEach((n,i)=>tone(n,.18,'triangle',.04,i*.08)),recover:()=>[330,440,660].forEach((n,i)=>tone(n,.18,'sine',.05,i*.08)),retry:()=>[220,330].forEach((n,i)=>tone(n,.12,'square',.03,i*.07)),ui:()=>tone(420,.05,'square',.018),finish:()=>[523,659,784,1046].forEach((n,i)=>tone(n,.25,'triangle',.055,i*.1))};
+function setMusic(name){currentTrack=name||'';
+Object.entries(tracks).forEach(([key,a])=>{if(key!==name){a.pause();a.currentTime=0}});
+if(name&&audioUnlocked&&save.musicOn&&save.masterVolume>0){tracks[name].volume=save.masterVolume*.38;tracks[name].play().catch(()=>{})}}
+function music(on){setMusic(on?'game':'')}
+function updateAudioButtons(){const audible=(save.musicOn||save.sfxOn)&&save.masterVolume>0;$$('#sound-btn,#game-sound-btn').forEach(b=>b.textContent=audible?'🔊':'🔇')}
+function toggleSound(){const on=(save.musicOn||save.sfxOn)&&save.masterVolume>0;
+save.musicOn=!on;save.sfxOn=!on;if(!on&&save.masterVolume===0)save.masterVolume=.7;
+persist();applyAudioSettings();
+if(!on){wakeAudio();sfx.ui();setMusic($('#game-screen').classList.contains('active')?'game':'menu')}}
 
 const avatarDefaults={skin:1,hair:0,shirt:0,pants:0,extra:0};
 let avatar={...avatarDefaults};
@@ -149,7 +167,7 @@ c.fillRect(-52,25,9,29);
 c.fillRect(43,25,9,29)}if(a.extra===3){c.fillStyle='#ffe044';
 c.fillRect(45,108,18,7)}c.restore()}
 
-$('#play-btn').onclick=()=>{wakeAudio();
+$('#play-btn').onclick=()=>{wakeAudio();setMusic('menu');
 if(save.player){avatar={...save.player.avatar};
 show('home-screen')}else{makeOptions();
 drawAvatar($('#avatar-preview'));
@@ -168,6 +186,7 @@ function syncHome(){if(!save.player)return;
 $('#home-name').textContent=save.player.nickname.toUpperCase();
 $('#total-coins').textContent=save.coins;
 $$('.coins-sync').forEach(x=>x.textContent=save.coins);
+$$('.energy-sync').forEach(x=>x.textContent=save.powerEnergy);
 drawAvatar($('#home-avatar'),save.player.avatar)}
 $('#sound-btn').onclick=toggleSound;
 $('#game-sound-btn').onclick=toggleSound;
@@ -221,14 +240,17 @@ for(let x=520;
 x<l.world-250;
 x+=Math.max(520-i*22,330))obstacles.push({x:x+(i*31)%100,y:423,w:42,h:32,mobile:i>3&&x%2===0,phase:x});
 return{...l,platforms,gaps,coins,obstacles,gates:l.gates.map(g=>({...g,done:false,tries:0})),check:l.check.map(x=>({x,hit:false}))}}
-function startLevel(i){game={running:true,paused:false,orientationPaused:false,attemptOver:false,index:i,level:makeLevel(i),player:{x:80,y:370,vx:0,vy:0,w:42,h:64,on:false},camera:0,runCoins:0,lives:3,mathCorrect:0,mathTotal:LEVELS[i].gates.length,start:performance.now(),checkpoint:80,last:performance.now(),raf:0,activeGate:null};
+function startLevel(i){game={running:true,paused:false,orientationPaused:false,attemptOver:false,index:i,level:makeLevel(i),player:{x:80,y:370,vx:0,vy:0,w:42,h:64,on:false},camera:0,runCoins:0,lives:5,mathCorrect:0,mathTotal:LEVELS[i].gates.length,start:performance.now(),checkpoint:80,last:performance.now(),raf:0,activeGate:null,shield:false,rescues:0,correctStreak:0,missStreak:0,turboUntil:0,safeMath:null};
 keys={left:false,right:false,jump:false};
 $('#level-label').textContent=`LEVEL ${i+1}`;
 $('#mission-label').textContent=LEVELS[i].name;
 $('#run-coins').textContent=0;
-$('#lives').textContent=3;
+$('#lives').textContent=5;
+$('#run-stars').textContent=save.stars[i+1]||0;
+updatePowerHUD();
 $('#pause-panel').classList.add('hidden');
 $('#nice-try-panel').classList.add('hidden');
+$('#rescue-panel').classList.add('hidden');
 $('#math-panel').classList.add('hidden');
 show('game-screen');
 music(true);
@@ -238,9 +260,10 @@ function groundAt(x){return !game.level.gaps.some(g=>x>g.x&&x<g.x+g.w)}
 function collide(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function update(dt,now){const p=game.player,l=game.level;
 if(game.paused||game.orientationPaused||game.activeGate)return;
-p.vx+=(keys.right-keys.left)*1500*dt;
+const turbo=now<game.turboUntil,speed=turbo?1.22:1;
+p.vx+=(keys.right-keys.left)*1500*speed*dt;
 p.vx*=Math.pow(.001,dt);
-p.vx=Math.max(-310,Math.min(310,p.vx));
+p.vx=Math.max(-310*speed,Math.min(310*speed,p.vx));
 if(keys.jump&&p.on){p.vy=-650;
 p.on=false;
 sfx.jump()}keys.jump=false;
@@ -273,54 +296,65 @@ if(gate){p.vx=0;
 openMath(gate)}if(p.y>600)hitPlayer();
 if(p.x>l.goal)finishLevel();
 game.camera=Math.max(0,Math.min(l.world-960,p.x-260))}
-function hitPlayer(){const p=game.player;
-if(game.attemptOver)return;
-game.lives--;
-$('#lives').textContent=game.lives;
-sfx.wrong();
-if(game.lives<=0){endAttempt();
-return}toast('KEEP GOING!');
-p.x=game.checkpoint;
-p.y=350;
-p.vx=0;
-p.vy=0}
-function endAttempt(){game.attemptOver=true;
-game.paused=true;
-game.activeGate=null;
-keys={left:false,right:false,jump:false};
-$('#math-panel').classList.add('hidden');
-$('#nice-try-panel').classList.remove('hidden');
-music(false)}
-function questionFor(g){let op='+',answer;
-if(game.level.math==='sub')op='-';
-else if(['groups','times2','times5','final'].includes(game.level.math))op='×';
-else if(game.level.math==='mix')op=g.op||'+';
-if(op==='+')answer=g.a+g.b;
-if(op==='-')answer=g.a-g.b;
-if(op==='×')answer=g.a*g.b;
-return{op,answer}}
-function openMath(g){game.activeGate=g;
-const q=questionFor(g);
+function respawn(){const p=game.player;p.x=game.checkpoint;p.y=350;p.vx=0;p.vy=0;p.on=false;game.last=performance.now()}
+function updatePowerHUD(){if(!game||!$('#power-energy'))return;
+$('#power-energy').textContent=save.powerEnergy;
+$$('.energy-sync').forEach(x=>x.textContent=save.powerEnergy);
+const shield=$('#shield-btn');
+shield.classList.toggle('active',!!game.shield);
+shield.classList.toggle('ready',save.powerEnergy>=3&&!game.shield);
+shield.disabled=save.powerEnergy<3||!!game.shield||!game.running;
+shield.innerHTML=game.shield?'🛡️ <span>READY</span>':'🛡️ <span>3⚡</span>'}
+function hitPlayer(){if(game.attemptOver)return;
+if(game.shield){game.shield=false;respawn();updatePowerHUD();toast('SHIELD SAVED YOU!');sfx.shield();return}
+game.lives--;$('#lives').textContent=game.lives;sfx.loseHeart();
+if(game.lives<=0){endAttempt();return}
+toast('KEEP GOING!');respawn()}
+function endAttempt(){game.attemptOver=true;game.paused=true;game.activeGate=null;keys={left:false,right:false,jump:false};
+$('#math-panel').classList.add('hidden');music(false);
+if(save.powerEnergy>=5&&game.rescues<2){$('#rescue-count').textContent=`${2-game.rescues} rescue${2-game.rescues===1?'':'s'} left this run.`;$('#rescue-panel').classList.remove('hidden')}
+else $('#nice-try-panel').classList.remove('hidden')}
+const rand=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+function questionFor(){const level=game.index+1,kind=game.level.math,up=game.correctStreak>=2?1:game.missStreak>=2?-1:0;
+let a,b,op,key,answer,tries=0;
+do{if(kind==='add'){const cap=(level===1?10:18)+up*3;a=rand(1,Math.max(5,cap));b=rand(1,Math.max(4,cap-a+4));op='+'}
+else if(kind==='sub'){const cap=(level===3?22:38)+up*4;a=rand(10,Math.max(14,cap));b=rand(1,a);op='-'}
+else if(kind==='mix'){op=Math.random()<.5?'+':'-';const cap=(level===5?28:45)+up*4;a=rand(6,Math.max(12,cap));b=rand(1,op==='-'?a:Math.max(6,Math.floor(cap*.55)))}
+else if(kind==='groups'){a=rand(2,Math.max(2,4+up));b=rand(2,Math.max(2,4+up));op='×'}
+else if(kind==='times2'){a=2;b=rand(1,Math.max(6,10+up));op='×'}
+else if(kind==='times5'){a=5;b=rand(1,Math.max(6,10+up));op='×'}
+else{a=[2,5,10][rand(0,2)];b=rand(1,Math.max(6,10+up));op='×'}
+answer=op==='+'?a+b:op==='-'?a-b:a*b;key=`${a}${op}${b}`;tries++}while(key===save.lastQuestions[level]&&tries<20);
+save.lastQuestions[level]=key;persist();return{a,b,op,answer}}
+function safeForMath(g){const p=game.player;let safeX=Math.max(game.checkpoint,Math.min(g.x-95,p.x));
+const clear=x=>groundAt(x+p.w/2)&&!game.level.obstacles.some(o=>Math.abs(o.x-x)<75);
+while(safeX>game.checkpoint&&!clear(safeX))safeX-=12;
+if(!clear(safeX))safeX=Math.max(20,game.checkpoint-90);
+p.x=safeX;p.y=455-p.h;p.vx=0;p.vy=0;p.on=true;game.safeMath={x:safeX,y:p.y}}
+function restoreMathSafety(){const p=game.player,s=game.safeMath||{x:game.checkpoint,y:391};p.x=s.x;p.y=s.y;p.vx=0;p.vy=0;p.on=true;game.last=performance.now()}
+function hintFor(q,strong=false){if(q.op==='+')return strong?`Break it apart: ${q.a} + ${q.b}. Count on ${q.b} more.`:'Start with the bigger number and count on.';
+if(q.op==='-')return strong?`Start at ${q.a}. Count back ${q.b} steps.`:'Count backward in small steps.';
+return strong?`${q.b} groups of ${q.a}: ${Array(Math.min(q.b,10)).fill('●'.repeat(Math.min(q.a,10))).join('  ')}`:`Think of ${q.b} groups with ${q.a} in each group.`}
+function openMath(g){game.activeGate=g;g.tries=0;g.question=questionFor();safeForMath(g);const q=g.question;
 $('#math-kind').textContent=game.level.math==='groups'?'GROUP POWER':'POWER GATE';
-$('#math-question').textContent=`${g.a} ${q.op} ${g.b} = ?`;
-$('#math-visual').textContent=q.op==='×'?(game.level.math==='groups'?`${g.b} groups of ${g.a}: `:'Count by groups: ')+Array(Math.min(g.b,10)).fill(`●`.repeat(Math.min(g.a,10))).join('  '):'Choose the number that powers the gate.';
-const vals=[q.answer,q.answer+(q.answer<10?2:5),Math.max(0,q.answer-(q.answer<10?1:3))].sort(()=>Math.random()-.5),box=$('#math-answers');
-box.innerHTML='';
-vals.forEach(v=>{const b=document.createElement('button');
-b.textContent=v;
-b.onclick=()=>answerMath(v===q.answer,g,q.answer);
-box.appendChild(b)});
-$('#math-feedback').textContent='';
-$('#math-panel').classList.remove('hidden')}
-function answerMath(ok,g,answer){if(ok){g.done=true;
-game.mathCorrect++;
-game.activeGate=null;
-$('#math-panel').classList.add('hidden');
-toast(t.great);
-sfx.correct();
-return}g.tries++;
-sfx.wrong();
-$('#math-feedback').textContent=g.tries===1?t.almost:g.tries===2?`${t.got} HINT: Think in small steps.`:`THE ANSWER IS ${answer}. TAP IT!`}
+$('#math-question').textContent=`${q.a} ${q.op} ${q.b} = ?`;
+$('#math-visual').textContent=q.op==='×'?(game.level.math==='groups'?`${q.b} groups of ${q.a}: `:'Count the groups: ')+Array(Math.min(q.b,10)).fill('●'.repeat(Math.min(q.a,10))).join('  '):'Choose the number that powers the path.';
+const offsets=q.answer<10?[1,2]:[3,5],vals=[q.answer,q.answer+offsets[1],Math.max(0,q.answer-offsets[0])].sort(()=>Math.random()-.5),box=$('#math-answers');box.innerHTML='';
+vals.forEach(v=>{const b=document.createElement('button');b.textContent=v;b.onclick=()=>answerMath(v===q.answer,g);box.appendChild(b)});
+$('#math-feedback').textContent='';$('#math-reward').classList.add('hidden');$('#math-panel').classList.remove('hidden');sfx.challenge()}
+function finishMath(g,earned){g.done=true;restoreMathSafety();
+if(earned){game.mathCorrect++;game.correctStreak++;game.missStreak=0;save.powerEnergy++;persist();updatePowerHUD();
+$('.power-stat')?.classList.add('flash');setTimeout(()=>$('.power-stat')?.classList.remove('flash'),900);
+$('#math-reward').classList.remove('hidden');$('#math-feedback').textContent='';sfx.correct();setTimeout(()=>sfx.energy(),120);
+if(game.correctStreak%3===0){game.turboUntil=performance.now()+6000;setTimeout(()=>{toast('TURBO BOOST!');sfx.turbo()},300)}}
+else{game.correctStreak=0;game.missStreak++}
+setTimeout(()=>{game.activeGate=null;$('#math-panel').classList.add('hidden');$('#math-reward').classList.add('hidden');restoreMathSafety()},earned?900:1200)}
+function answerMath(ok,g){if(g.resolving)return;
+if(ok){g.resolving=true;finishMath(g,true);return}
+g.tries++;game.correctStreak=0;sfx.wrong();
+if(g.tries===1){$('#math-feedback').textContent=`${t.almost} ${t.again} ${hintFor(g.question)}`;return}
+if(g.tries===2){$('#math-feedback').textContent=`${t.got} ${hintFor(g.question,true)}`;return}
+g.resolving=true;$('#math-feedback').textContent=`LET'S LEARN IT: ${g.question.a} ${g.question.op} ${g.question.b} = ${g.question.answer}`;finishMath(g,false)}
 function toast(msg){const el=$('#toast');
 el.textContent=msg;
 el.classList.add('show');
@@ -470,7 +504,7 @@ ctx.save();
 const dir=vx<0?-1:1,bob=on&&Math.abs(vx)<20?Math.sin(now/250)*2:0;
 ctx.translate(x+21,y-22+bob);
 if(dir<0)ctx.scale(-1,1);
-glow('#05d9ff',7);
+glow(game.shield?'#ffe044':now<game.turboUntil?'#ff3bbd':'#05d9ff',game.shield?22:now<game.turboUntil?16:7);
 if(im&&im.complete&&im.naturalWidth)ctx.drawImage(im,-43,-19,86,115);
 else{ctx.fillStyle='#05d9ff';
 ctx.fillRect(-18,10,36,48);
@@ -478,6 +512,8 @@ ctx.fillStyle='#ffe044';
 ctx.beginPath();
 ctx.arc(0,0,15,0,7);
 ctx.fill()}noGlow();
+if(game.shield){ctx.strokeStyle='#ffe044aa';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(0,38,47,62,0,0,Math.PI*2);ctx.stroke()}
+if(now<game.turboUntil){ctx.strokeStyle='#ff3bbdaa';ctx.lineWidth=3;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-54-i*10,38+i*14);ctx.lineTo(-83-i*13,38+i*14);ctx.stroke()}}
 ctx.restore()}
 function loop(now){if(!game.running)return;
 const dt=Math.min((now-game.last)/1000,.035);
@@ -507,24 +543,40 @@ $('#result-time').textContent=`${Math.floor(secs/60)}:${String(secs%60).padStart
 $('#unlock-message').textContent=l<10?`LEVEL ${l+1} UNLOCKED!`:'YOU ARE THE CITY CHAMPION!';
 $('#next-btn').style.display=l<10?'block':'none';
 drawAvatar($('#dance-avatar'),save.player.avatar,1);
-show('complete-screen')}
-$('#pause-btn').onclick=()=>{game.paused=true;
+show('complete-screen');
+setTimeout(()=>setMusic('victory'),180)}
+$('#pause-btn').onclick=()=>{game.paused=true;tracks.game.pause();
 $('#pause-panel').classList.remove('hidden')};
 $('#resume-btn').onclick=()=>{game.paused=false;
 game.last=performance.now();
+if(save.musicOn&&audioUnlocked)tracks.game.play().catch(()=>{});
 $('#pause-panel').classList.add('hidden')};
-$('#restart-btn').onclick=()=>startLevel(game.index);
+$('#restart-btn').onclick=()=>{sfx.retry();startLevel(game.index)};
 $('#exit-btn').onclick=()=>{game.running=false;
 cancelAnimationFrame(game.raf);
 music(false);
 show('map-screen')};
-$('#again-btn').onclick=()=>startLevel(game.index);
+$('#again-btn').onclick=()=>{sfx.retry();startLevel(game.index)};
 $('#next-btn').onclick=()=>startLevel(Math.min(9,game.index+1));
-$('#try-again-btn').onclick=()=>startLevel(game.index);
+$('#try-again-btn').onclick=()=>{sfx.retry();startLevel(game.index)};
+$('#rescue-retry-btn').onclick=()=>{sfx.retry();startLevel(game.index)};
+$('#keep-going-btn').onclick=()=>{if(save.powerEnergy<5||game.rescues>=2)return;
+save.powerEnergy-=5;persist();game.rescues++;game.lives=1;game.attemptOver=false;game.paused=false;$('#lives').textContent=1;$('#rescue-panel').classList.add('hidden');respawn();updatePowerHUD();setMusic('game');toast('+1 HEART! KEEP GOING!');sfx.recover()};
+$('#shield-btn').onclick=()=>{wakeAudio();if(!game.running||game.shield||save.powerEnergy<3)return;
+save.powerEnergy-=3;persist();game.shield=true;updatePowerHUD();toast('SHIELD READY!');sfx.shield()};
 $('#retry-map-btn').onclick=()=>{game.running=false;
 cancelAnimationFrame(game.raf);
 music(false);
 show('map-screen')};
+
+function openSettings(){wakeAudio();if(!currentTrack)setMusic('menu');sfx.ui();applyAudioSettings();$('#settings-panel').classList.remove('hidden')}
+function closeSettings(){sfx.ui();$('#settings-panel').classList.add('hidden')}
+$$('.settings-btn').forEach(b=>b.onclick=openSettings);
+$('#settings-close').onclick=closeSettings;
+$('#settings-panel').addEventListener('pointerdown',e=>{if(e.target===$('#settings-panel'))closeSettings()});
+$('#music-toggle').onclick=()=>{wakeAudio();save.musicOn=!save.musicOn;persist();applyAudioSettings();if(save.musicOn)setMusic($('#game-screen').classList.contains('active')?'game':'menu')};
+$('#sfx-toggle').onclick=()=>{wakeAudio();save.sfxOn=!save.sfxOn;persist();applyAudioSettings();if(save.sfxOn)sfx.ui()};
+$('#master-volume').oninput=e=>{save.masterVolume=Number(e.target.value)/100;persist();applyAudioSettings()};
 
 function setKey(k,v){keys[k]=v}$$('#touch-controls button').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();
 wakeAudio();
@@ -596,7 +648,7 @@ fitCanvas();
 updateInstallUI();
 updateFullscreenUI();
 updateOrientationGate();
-$$('#sound-btn,#game-sound-btn').forEach(b=>b.textContent=save.sound?'🔊':'🔇');
+applyAudioSettings();
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
 
 })();
