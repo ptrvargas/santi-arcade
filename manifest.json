@@ -1,7 +1,7 @@
 {
   "name": "Santi Arcade",
   "short_name": "Santi Arcade",
-  "description": "Santi Arcade V0.2 — Play, learn, and level up in City Quest.",
+  "description": "Santi Arcade V0.3 — Play, learn, and level up in City Quest.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

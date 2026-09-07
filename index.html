@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="preload" href="assets/city-panorama.webp" as="image" type="image/webp">
   <link rel="preload" href="assets/hero-0.webp" as="image" type="image/webp">
-  <title>Santi Arcade V0.2</title>
+  <title>Santi Arcade V0.3</title>
 </head>
 <body>
   <main id="app">
@@ -26,6 +26,11 @@
         <p>Play <b>•</b> Learn <b>•</b> Level Up</p>
       </div>
       <button id="play-btn" class="mega-btn">PLAY <span>▶</span></button>
+      <button id="install-btn" class="install-btn hidden" type="button">📲 INSTALL APP</button>
+      <aside id="ios-install-help" class="install-help hidden" aria-label="Install Santi Arcade">
+        <strong>ADD SANTI ARCADE TO HOME SCREEN</strong>
+        <span>Tap Share <b>↗</b> → Add to Home Screen</span>
+      </aside>
       <p class="save-note">Your adventure saves on this device.</p>
     </section>
 
@@ -63,11 +68,12 @@
     </section>
 
     <section id="game-screen" class="screen game-screen" aria-label="City Quest game">
-      <div id="rotate-hint"><span>↻</span> Turn your phone sideways for more room!</div>
-      <div class="game-hud"><button id="pause-btn" class="hud-btn" aria-label="Pause">Ⅱ</button><div><small id="level-label">LEVEL 1</small><strong id="mission-label">NEON START</strong></div><div class="hud-stats"><span>● <b id="run-coins">0</b></span><span>♥ <b id="lives">3</b></span></div><button id="game-sound-btn" class="hud-btn" aria-label="Toggle sound">🔊</button></div>
+      <div id="rotate-hint" aria-live="polite"><span>↻</span><strong>ROTATE YOUR PHONE TO PLAY</strong><small>If rotation is locked, turn on Auto-Rotate.</small></div>
+      <div class="game-hud"><button id="pause-btn" class="hud-btn" aria-label="Pause">Ⅱ</button><div><small id="level-label">LEVEL 1</small><strong id="mission-label">NEON START</strong></div><div class="hud-stats"><span>● <b id="run-coins">0</b></span><span>♥ <b id="lives">3</b></span></div><button id="fullscreen-btn" class="fullscreen-btn" type="button" aria-label="Enter full screen">⛶ <span>FULL SCREEN</span></button><button id="game-sound-btn" class="hud-btn" aria-label="Toggle sound">🔊</button></div>
       <div id="game-wrap"><canvas id="game-canvas" width="960" height="540" aria-label="Platform game"></canvas><div id="toast" role="status"></div><div id="math-panel" class="math-panel hidden"><small id="math-kind">POWER GATE</small><h3 id="math-question">5 + 4 = ?</h3><p id="math-visual"></p><div id="math-answers"></div><p id="math-feedback"></p></div></div>
       <div id="touch-controls" aria-label="Touch controls"><div class="move-controls"><button data-key="left" aria-label="Move left">◀<small>LEFT</small></button><button data-key="right" aria-label="Move right">▶<small>RIGHT</small></button></div><button data-key="jump" class="jump-btn" aria-label="Jump">▲<small>JUMP</small></button></div>
       <div id="pause-panel" class="overlay hidden"><div class="modal"><h2>PAUSED</h2><button id="resume-btn" class="primary-btn">KEEP PLAYING</button><button id="restart-btn" class="secondary-btn">RESTART LEVEL</button><button id="exit-btn" class="text-btn">LEVEL MAP</button></div></div>
+      <div id="nice-try-panel" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="nice-try-title"><div class="modal nice-try-modal"><div class="retry-icon" aria-hidden="true">♥</div><h2 id="nice-try-title">NICE TRY!</h2><p>Ready for another run?</p><button id="try-again-btn" class="primary-btn">TRY AGAIN</button><button id="retry-map-btn" class="text-btn">LEVEL MAP</button></div></div>
     </section>
 
     <section id="complete-screen" class="screen complete-screen" aria-label="Level complete">
